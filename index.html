@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Katz Konnection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Archivo:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --panel: #10151c;
+    --panel-2: #151c26;
+    --line: rgba(255,255,255,0.06);
+    --text: #ffffff;
+    --dim: #8a94a6;
+    --live: #ff3b3b;
+    --final: #6b7280;
+    --upcoming: #f4b942;
+    --diamond-on: #ffd84a;
+    --diamond-off: rgba(255,255,255,0.12);
+  }
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+width: 100%;
+height: 100%;
+background: var(–bg);
+color: var(–text);
+font-family: ‘Archivo’, sans-serif;
+overflow: hidden;
+}
+
+/* 1920x1080 stage, scaled to viewport */
+#stage-wrap {
+position: fixed;
+inset: 0;
+display: grid;
+place-items: center;
+background:
+radial-gradient(circle at 20% 0%, rgba(255,59,59,0.06), transparent 40%),
+radial-gradient(circle at 100% 100%, rgba(244,185,66,0.04), transparent 40%),
+var(–bg);
+}
+
+#stage {
+width: 1920px;
+height: 1080px;
+transform-origin: center center;
+position: relative;
+display: grid;
+grid-template-rows: 120px 1fr 50px;
+padding: 32px 48px;
+gap: 20px;
+}
+
+/* Header */
+header {
+display: grid;
+grid-template-columns: auto 1fr auto;
+align-items: center;
+gap: 32px;
+}
+
+.brand {
+display: flex;
+align-items: center;
+gap: 18px;
+}
+
+.brand-mark {
+width: 72px;
+height: 72px;
+border-radius: 14px;
+background: linear-gradient(135deg, #ff3b3b 0%, #b80d0d 100%);
+display: grid;
+place-items: center;
+font-family: ‘Archivo’, sans-serif;
+font-weight: 900;
+font-size: 38px;
+letter-spacing: -2px;
+box-shadow: 0 10px 40px rgba(255,59,59,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.brand-text .title {
+font-family: ‘Archivo’, sans-serif;
+font-weight: 900;
+font-size: 44px;
+letter-spacing: -1.5px;
+line-height: 0.9;
+text-transform: uppercase;
+}
+
+.brand-text .title em {
+font-style: normal;
+color: #ff3b3b;
+}
+
+.brand-text .subtitle {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 13px;
+font-weight: 500;
+color: var(–dim);
+letter-spacing: 2px;
+text-transform: uppercase;
+margin-top: 6px;
+}
+
+.header-center {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 24px;
+}
+
+.stat-chip {
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 12px 24px;
+border-radius: 10px;
+background: var(–panel);
+border: 1px solid var(–line);
+min-width: 110px;
+}
+
+.stat-chip .label {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 11px;
+color: var(–dim);
+letter-spacing: 1.5px;
+text-transform: uppercase;
+}
+
+.stat-chip .value {
+font-family: ‘Oswald’, sans-serif;
+font-weight: 700;
+font-size: 32px;
+line-height: 1;
+margin-top: 4px;
+}
+
+.stat-chip.live .value { color: var(–live); }
+.stat-chip.final .value { color: var(–dim); }
+.stat-chip.upcoming .value { color: var(–upcoming); }
+
+.header-right {
+display: flex;
+flex-direction: column;
+align-items: flex-end;
+gap: 6px;
+}
+
+.clock {
+font-family: ‘Oswald’, sans-serif;
+font-weight: 600;
+font-size: 36px;
+line-height: 1;
+letter-spacing: -0.5px;
+}
+
+.date {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 12px;
+color: var(–dim);
+letter-spacing: 2px;
+text-transform: uppercase;
+}
+
+/* Grid of games */
+#games {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+grid-auto-rows: min-content;
+gap: 14px;
+align-content: start;
+overflow: hidden;
+}
+
+.game {
+background: var(–panel);
+border: 1px solid var(–line);
+border-radius: 12px;
+padding: 16px 18px;
+display: grid;
+grid-template-rows: auto 1fr auto;
+gap: 10px;
+position: relative;
+overflow: hidden;
+transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.game::before {
+content: ‘’;
+position: absolute;
+left: 0; top: 0; bottom: 0;
+width: 3px;
+background: var(–final);
+transition: background 0.3s ease;
+}
+
+.game.live::before { background: var(–live); box-shadow: 0 0 20px var(–live); }
+.game.upcoming::before { background: var(–upcoming); }
+.game.live { border-color: rgba(255,59,59,0.25); }
+
+.game-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding-bottom: 8px;
+border-bottom: 1px solid var(–line);
+}
+
+.status {
+display: flex;
+align-items: center;
+gap: 8px;
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 12px;
+font-weight: 700;
+letter-spacing: 1.5px;
+text-transform: uppercase;
+}
+
+.status .dot {
+width: 8px;
+height: 8px;
+border-radius: 50%;
+background: var(–final);
+}
+
+.game.live .status .dot {
+background: var(–live);
+animation: pulse 1.4s ease-in-out infinite;
+}
+
+.game.live .status { color: var(–live); }
+.game.upcoming .status { color: var(–upcoming); }
+.game.upcoming .status .dot { background: var(–upcoming); }
+.game.final .status { color: var(–dim); }
+
+@keyframes pulse {
+0%, 100% { opacity: 1; transform: scale(1); }
+50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+.inning-info {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 11px;
+color: var(–dim);
+letter-spacing: 1px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.teams {
+display: grid;
+grid-template-rows: 1fr 1fr;
+gap: 4px;
+}
+
+.team-row {
+display: grid;
+grid-template-columns: auto 1fr auto auto;
+align-items: center;
+gap: 12px;
+padding: 6px 4px;
+}
+
+.team-row.winner .team-name { color: var(–text); }
+.team-row.loser .team-name,
+.team-row.loser .score,
+.team-row.loser .hits { color: var(–dim); }
+
+.logo {
+width: 38px;
+height: 38px;
+border-radius: 6px;
+background: var(–panel-2);
+display: grid;
+place-items: center;
+overflow: hidden;
+flex-shrink: 0;
+}
+
+.logo img {
+width: 100%;
+height: 100%;
+object-fit: contain;
+filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.team-name {
+font-family: ‘Oswald’, sans-serif;
+font-weight: 600;
+font-size: 22px;
+letter-spacing: 0.5px;
+text-transform: uppercase;
+line-height: 1;
+}
+
+.team-meta {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10px;
+color: var(–dim);
+letter-spacing: 1px;
+margin-top: 2px;
+}
+
+.score {
+font-family: ‘Oswald’, sans-serif;
+font-weight: 700;
+font-size: 36px;
+line-height: 1;
+min-width: 48px;
+text-align: right;
+transition: color 0.3s ease;
+}
+
+.score.flash {
+animation: scoreFlash 0.8s ease-out;
+}
+
+@keyframes scoreFlash {
+0%   { color: #ffd84a; text-shadow: 0 0 20px #ffd84a; transform: scale(1.15); }
+100% { color: var(–text); text-shadow: none; transform: scale(1); }
+}
+
+.hits {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 12px;
+font-weight: 500;
+color: var(–dim);
+min-width: 28px;
+text-align: right;
+}
+
+.game-footer {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding-top: 8px;
+border-top: 1px solid var(–line);
+}
+
+.col-labels {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10px;
+color: var(–dim);
+letter-spacing: 2px;
+display: flex;
+gap: 14px;
+}
+
+.col-labels span {
+min-width: 28px;
+text-align: right;
+}
+
+/* Diamond (bases) */
+.diamond-wrap {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.diamond {
+width: 32px;
+height: 32px;
+position: relative;
+transform: rotate(45deg);
+}
+
+.base {
+position: absolute;
+width: 11px;
+height: 11px;
+background: var(–diamond-off);
+border: 1px solid rgba(255,255,255,0.2);
+transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.base.on {
+background: var(–diamond-on);
+box-shadow: 0 0 12px var(–diamond-on);
+}
+
+.base.first { right: 0; bottom: 0; }
+.base.second { right: 0; top: 0; }
+.base.third { left: 0; bottom: 0; }
+
+.outs {
+display: flex;
+gap: 4px;
+}
+
+.out {
+width: 8px;
+height: 8px;
+border-radius: 50%;
+background: var(–diamond-off);
+border: 1px solid rgba(255,255,255,0.2);
+}
+
+.out.on { background: var(–diamond-on); }
+
+.pitcher-info {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10px;
+color: var(–dim);
+letter-spacing: 0.5px;
+}
+
+.pitcher-info .label {
+color: var(–live);
+font-weight: 700;
+margin-right: 4px;
+}
+
+/* Footer ticker */
+footer {
+display: flex;
+align-items: center;
+justify-content: space-between;
+background: var(–panel);
+border: 1px solid var(–line);
+border-radius: 10px;
+padding: 0 20px;
+overflow: hidden;
+}
+
+.ticker-label {
+font-family: ‘Archivo’, sans-serif;
+font-weight: 900;
+font-size: 14px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–live);
+padding-right: 20px;
+border-right: 1px solid var(–line);
+margin-right: 20px;
+flex-shrink: 0;
+}
+
+.ticker-viewport {
+flex: 1;
+overflow: hidden;
+position: relative;
+height: 50px;
+display: flex;
+align-items: center;
+}
+
+.ticker-track {
+display: flex;
+gap: 40px;
+white-space: nowrap;
+animation: ticker 90s linear infinite;
+}
+
+.ticker-item {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 14px;
+color: var(–text);
+letter-spacing: 0.5px;
+}
+
+.ticker-item .separator { color: var(–live); margin: 0 10px; }
+.ticker-item .team-abbr { font-weight: 700; }
+.ticker-item .score-val { color: #ffd84a; font-weight: 700; }
+
+@keyframes ticker {
+0% { transform: translateX(0); }
+100% { transform: translateX(-50%); }
+}
+
+.empty {
+grid-column: 1 / -1;
+text-align: center;
+padding: 80px 20px;
+font-family: ‘Archivo’, sans-serif;
+color: var(–dim);
+}
+
+.empty h2 {
+font-size: 32px;
+font-weight: 900;
+margin-bottom: 12px;
+letter-spacing: -1px;
+}
+
+.loading {
+grid-column: 1 / -1;
+text-align: center;
+padding: 80px 20px;
+font-family: ‘JetBrains Mono’, monospace;
+color: var(–dim);
+letter-spacing: 2px;
+}
+
+.game-enter {
+animation: gameIn 0.5s ease-out backwards;
+}
+
+@keyframes gameIn {
+0%   { opacity: 0; transform: translateY(20px); }
+100% { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+</head>
+<body>
+<div id="stage-wrap">
+  <div id="stage">
+    <header>
+      <div class="brand">
+        <div class="brand-mark">K</div>
+        <div class="brand-text">
+          <div class="title">THE KATZ <em>KONNECTION</em></div>
+          <div class="subtitle">MLB · LIVE ACTIVE GAMES</div>
+        </div>
+      </div>
+      <div class="header-center">
+        <div class="stat-chip live">
+          <div class="label">Live</div>
+          <div class="value" id="count-live">0</div>
+        </div>
+        <div class="stat-chip final">
+          <div class="label">Final</div>
+          <div class="value" id="count-final">0</div>
+        </div>
+        <div class="stat-chip upcoming">
+          <div class="label">Upcoming</div>
+          <div class="value" id="count-upcoming">0</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="clock" id="clock">—:—</div>
+        <div class="date" id="date">—</div>
+      </div>
+    </header>
+
+```
+<section id="games">
+  <div class="loading">LOADING LIVE FEED…</div>
+</section>
+
+<footer>
+  <div class="ticker-label">SCORES</div>
+  <div class="ticker-viewport">
+    <div class="ticker-track" id="ticker">
+      <div class="ticker-item">Connecting to feed…</div>
+    </div>
+  </div>
+</footer>
+```
+
+  </div>
+</div>
+
+<script>
+  /* =========================================================
+     THE KATZ KONNECTION — MLB Active Games Board
+     Built off the Singular reference, rebuilt from scratch.
+     Polls the MLB Stats API and re-renders every 15s.
+     Fixed 1920x1080 stage, CSS-scaled to any viewport.
+     ========================================================= */
+
+  // --- Responsive scale of the 1920x1080 stage ------------------
+  function scaleStage() {
+    const stage = document.getElementById('stage');
+    const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    stage.style.transform = `scale(${scale})`;
+  }
+  window.addEventListener('resize', scaleStage);
+  scaleStage();
+
+  // --- Clock --------------------------------------------------
+  function updateClock() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+    document.getElementById('clock').textContent = timeStr;
+    document.getElementById('date').textContent = dateStr;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // --- State --------------------------------------------------
+  const previousScores = new Map(); // gamePk -> {home, away}
+  let previousGameKeys = new Set();
+
+  // --- Helpers ------------------------------------------------
+  function todayISO() {
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function logoUrl(teamId) {
+    return `https://www.mlbstatic.com/team-logos/${teamId}.svg`;
+  }
+
+  function formatGameTime(iso) {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+
+  function inningSuffix(n) {
+    if (n >= 11 && n <= 13) return 'th';
+    const last = n % 10;
+    if (last === 1) return 'st';
+    if (last === 2) return 'nd';
+    if (last === 3) return 'rd';
+    return 'th';
+  }
+
+  // --- Fetch + render ----------------------------------------
+  async function fetchGames() {
+    const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${todayISO()}&hydrate=linescore,team,probablePitcher`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const games = (data.dates && data.dates[0] && data.dates[0].games) || [];
+      render(games);
+    } catch (err) {
+      console.error('Feed error:', err);
+      const feed = document.getElementById('games');
+      if (!feed.querySelector('.game')) {
+        feed.innerHTML = `<div class="empty"><h2>Feed Unavailable</h2><div>Retrying…</div></div>`;
+      }
+    }
+  }
+
+  function statusBucket(game) {
+    const abs = game.status?.abstractGameState || '';
+    const detailed = game.status?.detailedState || '';
+    if (abs === 'Live' || detailed === 'In Progress' || detailed === 'Manager challenge') return 'live';
+    if (abs === 'Final' || detailed.includes('Final') || detailed === 'Game Over' || detailed === 'Completed Early') return 'final';
+    return 'upcoming';
+  }
+
+  function render(games) {
+    // Sort: live > upcoming (by time) > final
+    const bucketOrder = { live: 0, upcoming: 1, final: 2 };
+    games.sort((a, b) => {
+      const ba = bucketOrder[statusBucket(a)];
+      const bb = bucketOrder[statusBucket(b)];
+      if (ba !== bb) return ba - bb;
+      return new Date(a.gameDate) - new Date(b.gameDate);
+    });
+
+    // Counts
+    let liveCount = 0, finalCount = 0, upcomingCount = 0;
+    games.forEach(g => {
+      const b = statusBucket(g);
+      if (b === 'live') liveCount++;
+      else if (b === 'final') finalCount++;
+      else upcomingCount++;
+    });
+    document.getElementById('count-live').textContent = liveCount;
+    document.getElementById('count-final').textContent = finalCount;
+    document.getElementById('count-upcoming').textContent = upcomingCount;
+
+    // Render grid
+    const feed = document.getElementById('games');
+    if (games.length === 0) {
+      feed.innerHTML = `<div class="empty"><h2>No Games Today</h2><div>Check back tomorrow.</div></div>`;
+      return;
+    }
+
+    // Cap to 12 for a clean 3x4 grid on the 1080p stage
+    const visible = games.slice(0, 12);
+
+    feed.innerHTML = '';
+    const currentKeys = new Set();
+
+    visible.forEach((g, idx) => {
+      currentKeys.add(g.gamePk);
+      const bucket = statusBucket(g);
+      const home = g.teams.home;
+      const away = g.teams.away;
+      const ls = g.linescore || {};
+
+      const homeRuns = home.score ?? 0;
+      const awayRuns = away.score ?? 0;
+      const homeHits = ls.teams?.home?.hits ?? '-';
+      const awayHits = ls.teams?.away?.hits ?? '-';
+
+      // Winner/loser styling on finals
+      let homeClass = '', awayClass = '';
+      if (bucket === 'final') {
+        if (homeRuns > awayRuns) { homeClass = 'winner'; awayClass = 'loser'; }
+        else if (awayRuns > homeRuns) { awayClass = 'winner'; homeClass = 'loser'; }
+      }
+
+      // Status text
+      let statusText = 'SCHEDULED';
+      let inningText = formatGameTime(g.gameDate);
+      if (bucket === 'live') {
+        statusText = 'LIVE';
+        const half = ls.inningHalf || '';
+        const inning = ls.currentInning || 1;
+        const arrow = half === 'Top' ? '▲' : '▼';
+        inningText = `${arrow} ${inning}${inningSuffix(inning)}`;
+      } else if (bucket === 'final') {
+        statusText = 'FINAL';
+        inningText = ls.currentInning && ls.currentInning !== 9 ? `F/${ls.currentInning}` : 'F';
+      }
+
+      // Bases + outs (live only)
+      let diamondHtml = '';
+      if (bucket === 'live') {
+        const onFirst = !!ls.offense?.first;
+        const onSecond = !!ls.offense?.second;
+        const onThird = !!ls.offense?.third;
+        const outs = ls.outs ?? 0;
+
+        diamondHtml = `
+          <div class="diamond-wrap">
+            <div class="diamond">
+              <div class="base second ${onSecond ? 'on' : ''}"></div>
+              <div class="base first ${onFirst ? 'on' : ''}"></div>
+              <div class="base third ${onThird ? 'on' : ''}"></div>
+            </div>
+            <div class="outs">
+              <div class="out ${outs >= 1 ? 'on' : ''}"></div>
+              <div class="out ${outs >= 2 ? 'on' : ''}"></div>
+              <div class="out ${outs >= 3 ? 'on' : ''}"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Probable pitcher footer (scheduled only)
+      let footerExtra = '';
+      if (bucket === 'upcoming') {
+        const awayP = away.probablePitcher?.fullName;
+        const homeP = home.probablePitcher?.fullName;
+        if (awayP || homeP) {
+          footerExtra = `<div class="pitcher-info">${awayP ? awayP.split(' ').slice(-1)[0] : 'TBD'} vs ${homeP ? homeP.split(' ').slice(-1)[0] : 'TBD'}</div>`;
+        }
+      }
+
+      const card = document.createElement('div');
+      card.className = `game ${bucket}`;
+      card.dataset.gamepk = g.gamePk;
+      if (!previousGameKeys.has(g.gamePk)) {
+        card.classList.add('game-enter');
+        card.style.animationDelay = `${idx * 40}ms`;
+      }
+
+      card.innerHTML = `
+        <div class="game-header">
+          <div class="status"><span class="dot"></span>${statusText}</div>
+          <div class="inning-info">${inningText}</div>
+        </div>
+        <div class="teams">
+          <div class="team-row ${awayClass}">
+            <div class="logo"><img src="${logoUrl(away.team.id)}" alt="${away.team.name}" onerror="this.style.display='none'"/></div>
+            <div>
+              <div class="team-name">${away.team.teamName || away.team.name}</div>
+              <div class="team-meta">${away.leagueRecord ? `${away.leagueRecord.wins}-${away.leagueRecord.losses}` : ''} · AWAY</div>
+            </div>
+            <div class="score" data-team="away" data-gamepk="${g.gamePk}">${awayRuns}</div>
+            <div class="hits">${awayHits}</div>
+          </div>
+          <div class="team-row ${homeClass}">
+            <div class="logo"><img src="${logoUrl(home.team.id)}" alt="${home.team.name}" onerror="this.style.display='none'"/></div>
+            <div>
+              <div class="team-name">${home.team.teamName || home.team.name}</div>
+              <div class="team-meta">${home.leagueRecord ? `${home.leagueRecord.wins}-${home.leagueRecord.losses}` : ''} · HOME</div>
+            </div>
+            <div class="score" data-team="home" data-gamepk="${g.gamePk}">${homeRuns}</div>
+            <div class="hits">${homeHits}</div>
+          </div>
+        </div>
+        <div class="game-footer">
+          <div class="col-labels"><span>R</span><span>H</span></div>
+          ${diamondHtml || footerExtra || '<div></div>'}
+        </div>
+      `;
+
+      feed.appendChild(card);
+
+      // Flash scores that changed since last poll
+      const prev = previousScores.get(g.gamePk);
+      if (prev) {
+        if (prev.away !== awayRuns) {
+          card.querySelector('[data-team="away"]').classList.add('flash');
+        }
+        if (prev.home !== homeRuns) {
+          card.querySelector('[data-team="home"]').classList.add('flash');
+        }
+      }
+      previousScores.set(g.gamePk, { home: homeRuns, away: awayRuns });
+    });
+
+    previousGameKeys = currentKeys;
+
+    // Ticker
+    updateTicker(games);
+  }
+
+  function updateTicker(games) {
+    const items = games.map(g => {
+      const bucket = statusBucket(g);
+      const away = g.teams.away;
+      const home = g.teams.home;
+      const awayAbbr = away.team.abbreviation || away.team.name.slice(0,3).toUpperCase();
+      const homeAbbr = home.team.abbreviation || home.team.name.slice(0,3).toUpperCase();
+      let statusLabel;
+      if (bucket === 'live') {
+        const half = g.linescore?.inningHalf === 'Top' ? '▲' : '▼';
+        const inning = g.linescore?.currentInning || 1;
+        statusLabel = `${half}${inning}`;
+      } else if (bucket === 'final') {
+        statusLabel = 'F';
+      } else {
+        statusLabel = formatGameTime(g.gameDate);
+      }
+      return `<div class="ticker-item">
+        <span class="team-abbr">${awayAbbr}</span> <span class="score-val">${away.score ?? '—'}</span>
+        <span class="separator">@</span>
+        <span class="team-abbr">${homeAbbr}</span> <span class="score-val">${home.score ?? '—'}</span>
+        <span class="separator">·</span> ${statusLabel}
+      </div>`;
+    }).join('');
+
+    // Duplicate for seamless loop
+    document.getElementById('ticker').innerHTML = items + items;
+  }
+
+  // --- Boot + poll --------------------------------------------
+  fetchGames();
+  setInterval(fetchGames, 15000); // 15s refresh
+</script>
+
+</body>
+</html>
