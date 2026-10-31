@@ -61,7 +61,7 @@
   /* Header */
   header {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 32px;
   }
@@ -93,6 +93,7 @@
     letter-spacing: -1.5px;
     line-height: 0.9;
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .brand-text .title em {
@@ -173,6 +174,40 @@
 
   .date .archive { color: var(--upcoming); }
 
+  /* Day navigation + pager */
+  .date-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    height: 26px;
+    min-width: 26px;
+    padding: 0 8px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .nav-btn:hover { border-color: rgba(255,255,255,0.3); background: var(--panel-2); }
+  .nav-btn[hidden], .stat-chip[hidden] { display: none; }
+
+  .stat-chip.pager .value {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 26px;
+  }
+
   /* Grid of games */
   #games {
     display: grid;
@@ -210,6 +245,8 @@
   .game.live::before { background: var(--live); box-shadow: 0 0 20px var(--live); }
   .game.upcoming::before { background: var(--upcoming); }
   .game.live { border-color: rgba(255,59,59,0.25); }
+  .game.clickable { cursor: pointer; }
+  .game.clickable:hover { border-color: rgba(255,255,255,0.22); background: var(--panel-2); }
 
   .game-header {
     display: flex;
@@ -655,6 +692,174 @@
     letter-spacing: 2px;
   }
 
+  /* Box score overlay */
+  #box {
+    position: absolute;
+    left: 48px;
+    right: 48px;
+    top: 172px;
+    bottom: 32px;
+    z-index: 10;
+    display: none;
+    flex-direction: column;
+    gap: 18px;
+    padding: 22px 28px;
+    background: var(--bg);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+    overflow: auto;
+  }
+
+  #box.open { display: flex; animation: gameIn 0.3s ease-out; }
+
+  .box-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .box-title {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 900;
+    font-size: 26px;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+  }
+
+  .box-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .box-status.live { color: var(--live); }
+  .box-top .tag { margin-left: 0; }
+  .box-top .nav-btn { margin-left: auto; height: 34px; font-size: 13px; padding: 0 14px; }
+
+  .box-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 40px;
+    align-items: center;
+  }
+
+  table.ls {
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+  }
+
+  table.ls th, table.ls td {
+    padding: 5px 9px;
+    min-width: 36px;
+    text-align: center;
+  }
+
+  table.ls th {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--dim);
+    border-bottom: 1px solid var(--line);
+  }
+
+  table.ls td.team {
+    text-align: left;
+    min-width: 120px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 22px;
+  }
+
+  table.ls td.team span { display: flex; align-items: center; gap: 10px; }
+  table.ls td.team img { width: 28px; height: 28px; object-fit: contain; }
+  table.ls .rhe { font-weight: 700; }
+  table.ls .rhe.first { border-left: 1px solid rgba(255,255,255,0.15); }
+  table.ls td.rhe.first { color: var(--diamond-on); }
+
+  .box-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--dim);
+    letter-spacing: 0.5px;
+  }
+
+  .box-info b { color: var(--text); font-weight: 700; }
+  .box-info .dec { color: var(--live); font-weight: 700; margin-right: 4px; }
+
+  .box-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  .box-team h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .box-team h3 img { width: 26px; height: 26px; object-fit: contain; }
+
+  table.stats {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  table.stats + table.stats { margin-top: 12px; }
+
+  table.stats th {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--dim);
+    text-align: right;
+    padding: 4px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+
+  table.stats td {
+    text-align: right;
+    padding: 3px 6px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  table.stats th:first-child, table.stats td:first-child { text-align: left; width: 40%; }
+  table.stats td .pos { color: var(--dim); margin-left: 6px; font-size: 10px; }
+  table.stats td .note { color: var(--diamond-on); margin-left: 6px; font-size: 10px; }
+  table.stats tr.sub td:first-child { padding-left: 20px; }
+  table.stats td.season { color: var(--dim); }
+  table.stats tr.total td { font-weight: 700; border-bottom: none; }
+
+  .box-notes {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--dim);
+    margin-top: 8px;
+  }
+
+  .box-notes b { color: var(--text); }
+
+  .box-msg {
+    margin: auto;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 2px;
+    color: var(--dim);
+  }
+
   .game-enter {
     animation: gameIn 0.5s ease-out backwards;
   }
@@ -689,10 +894,23 @@
           <div class="label">Upcoming</div>
           <div class="value" id="count-upcoming">0</div>
         </div>
+        <div class="stat-chip pager" id="pager" hidden>
+          <div class="label">Page</div>
+          <div class="value">
+            <button class="nav-btn" data-page="-1" aria-label="Previous page">‹</button>
+            <span id="page-num">1/1</span>
+            <button class="nav-btn" data-page="1" aria-label="Next page">›</button>
+          </div>
+        </div>
       </div>
       <div class="header-right">
         <div class="clock" id="clock">-:--</div>
-        <div class="date" id="date"></div>
+        <div class="date-nav">
+          <button class="nav-btn" id="day-prev" aria-label="Previous day">‹</button>
+          <div class="date" id="date"></div>
+          <button class="nav-btn" id="day-next" aria-label="Next day">›</button>
+          <button class="nav-btn" id="day-today" hidden>Today</button>
+        </div>
       </div>
     </header>
 
@@ -708,6 +926,8 @@
         </div>
       </div>
     </footer>
+
+    <section id="box"></section>
   </div>
 </div>
 
@@ -719,6 +939,10 @@
 
      URL params:
        ?date=YYYY-MM-DD   show a specific day (archive / testing)
+
+     Controls: ‹ › in the header (or arrow keys) step through days,
+     the PAGE chip pages past 12 games, click a game for its box score
+     (Esc closes).
      ========================================================= */
 
   const API = 'https://statsapi.mlb.com/api/v1/schedule';
@@ -729,6 +953,8 @@
   const POLL_IDLE = 60 * 1000;        // games today, none live
   const POLL_EMPTY = 30 * 60 * 1000;  // no games on the board date
   const LOOKAHEAD_DAYS = 200;         // far enough to reach spring training from October
+  const PAGE_ROTATE = 20 * 1000;      // auto-advance pages on heavy days...
+  const IDLE_BEFORE_ROTATE = 60 * 1000; // ...once nobody has touched the board for a minute
 
   const POSTSEASON = {
     F: { short: 'WC', long: 'Wild Card' },
@@ -737,8 +963,11 @@
     W: { short: 'WS', long: 'World Series' }
   };
 
-  const params = new URLSearchParams(location.search);
-  const dateOverride = /^\d{4}-\d{2}-\d{2}$/.test(params.get('date') || '') ? params.get('date') : null;
+  function dateFromUrl() {
+    const d = new URLSearchParams(location.search).get('date') || '';
+    return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
+  }
+  let dateOverride = dateFromUrl();
 
   // --- Responsive scale of the 1920x1080 stage ------------------
   function scaleStage() {
@@ -769,11 +998,15 @@
     return Math.round((fromISO(toIso) - fromISO(fromIso)) / 86400000);
   }
 
-  function boardDate() {
-    if (dateOverride) return dateOverride;
+  // Today's slate, honoring the early-morning rollover
+  function todayBoardDate() {
     const now = new Date();
     if (now.getHours() < ROLLOVER_HOUR) now.setDate(now.getDate() - 1);
     return toISO(now);
+  }
+
+  function boardDate() {
+    return dateOverride || todayBoardDate();
   }
 
   function prettyDate(iso, opts) {
@@ -791,6 +1024,7 @@
       ? { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }
       : undefined);
     dateEl.innerHTML = dateOverride ? `<span class="archive">ARCHIVE</span> · ${label}` : label;
+    document.getElementById('day-today').hidden = !dateOverride;
   }
   updateClock();
   setInterval(updateClock, 1000);
@@ -799,6 +1033,10 @@
   const previousScores = new Map(); // gamePk -> {home, away}
   let previousGameKeys = new Set();
   let offseasonCache = { date: null, data: null };
+  let lastGames = [];               // sorted slate from the latest poll
+  const gameIndex = new Map();      // gamePk -> game, for the box score
+  let currentPage = 0;
+  let lastInteraction = 0;
 
   // --- Helpers ------------------------------------------------
   function logoUrl(teamId) {
@@ -882,8 +1120,11 @@
 
   // --- Fetch + render ----------------------------------------
   let pollTimer = null;
+  let fetchSeq = 0;
 
   async function fetchGames() {
+    clearTimeout(pollTimer);
+    const seq = ++fetchSeq;
     const date = boardDate();
     const url = `${API}?sportId=1&date=${date}&gameType=${GAME_TYPES}&hydrate=linescore,team,probablePitcher,decisions`;
     let next = POLL_IDLE;
@@ -892,6 +1133,7 @@
       const res = await fetch(url);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
+      if (seq !== fetchSeq) return; // the day changed while this was in flight
       const games = (data.dates && data.dates[0] && data.dates[0].games) || [];
       if (games.length === 0) {
         await renderEmpty(date);
@@ -902,6 +1144,7 @@
       }
       ok = true;
     } catch (err) {
+      if (seq !== fetchSeq) return;
       console.error('Feed error:', err);
       const feed = document.getElementById('games');
       if (!feed.querySelector('.game, .empty')) {
@@ -911,7 +1154,6 @@
     }
     // A past archive date never changes; stop polling after the first good render.
     if (ok && dateOverride && dateOverride < toISO(new Date())) return;
-    clearTimeout(pollTimer);
     pollTimer = setTimeout(fetchGames, next);
   }
 
@@ -941,7 +1183,43 @@
     setCounts(liveCount, finalCount, upcomingCount);
     document.getElementById('subtitle').textContent = subtitleFor(games);
 
-    const visible = games.slice(0, MAX_CARDS);
+    lastGames = games;
+    gameIndex.clear();
+    games.forEach(g => gameIndex.set(g.gamePk, g));
+
+    // Score changes are tracked across the whole slate so off-page games don't flash later
+    const flashes = new Map();
+    games.forEach(g => {
+      const away = g.teams.away.score ?? 0, home = g.teams.home.score ?? 0;
+      const prev = previousScores.get(g.gamePk);
+      if (prev) flashes.set(g.gamePk, { away: prev.away !== away, home: prev.home !== home });
+      previousScores.set(g.gamePk, { home, away });
+    });
+
+    const pages = Math.ceil(games.length / MAX_CARDS);
+    currentPage = Math.min(currentPage, pages - 1);
+    updatePager(pages);
+    renderPage(flashes);
+    document.getElementById('ticker-label').textContent = 'SCORES';
+    updateTicker(games);
+  }
+
+  function updatePager(pages) {
+    document.getElementById('pager').hidden = pages < 2;
+    document.getElementById('page-num').textContent = `${currentPage + 1}/${pages}`;
+  }
+
+  function setPage(p) {
+    const pages = Math.ceil(lastGames.length / MAX_CARDS);
+    if (pages < 2) return;
+    currentPage = (p + pages) % pages;
+    updatePager(pages);
+    renderPage(new Map());
+  }
+
+  function renderPage(flashes) {
+    const games = lastGames;
+    const visible = games.slice(currentPage * MAX_CARDS, (currentPage + 1) * MAX_CARDS);
     const feed = document.getElementById('games');
     feed.innerHTML = '';
     const currentKeys = new Set();
@@ -1036,7 +1314,7 @@
       };
 
       const card = document.createElement('div');
-      card.className = `game ${bucket}`;
+      card.className = `game ${bucket}${started ? ' clickable' : ''}`;
       card.dataset.gamepk = g.gamePk;
       if (!previousGameKeys.has(g.gamePk)) {
         card.classList.add('game-enter');
@@ -1072,17 +1350,12 @@
       feed.appendChild(card);
 
       // Flash scores that changed since last poll
-      const prev = previousScores.get(g.gamePk);
-      if (prev) {
-        if (prev.away !== awayRuns) card.querySelector('[data-team="away"]').classList.add('flash');
-        if (prev.home !== homeRuns) card.querySelector('[data-team="home"]').classList.add('flash');
-      }
-      previousScores.set(g.gamePk, { home: homeRuns, away: awayRuns });
+      const flash = flashes.get(g.gamePk);
+      if (flash && flash.away) card.querySelector('[data-team="away"]').classList.add('flash');
+      if (flash && flash.home) card.querySelector('[data-team="home"]').classList.add('flash');
     });
 
     previousGameKeys = currentKeys;
-    document.getElementById('ticker-label').textContent = 'SCORES';
-    updateTicker(games);
   }
 
   function updateTicker(games) {
@@ -1101,7 +1374,7 @@
       } else {
         statusLabel = formatGameTime(g);
       }
-      const showScore = bucket !== 'upcoming';
+      const showScore = bucket !== 'upcoming' && !(isOffState(g) && !g.linescore?.currentInning);
       return `<div class="ticker-item">
         <span class="team-abbr">${abbr(away)}</span> <span class="score-val">${showScore ? away.score ?? '0' : ''}</span>
         <span class="separator">@</span>
@@ -1174,6 +1447,9 @@
   async function renderEmpty(date) {
     setCounts(0, 0, 0);
     previousGameKeys = new Set();
+    lastGames = [];
+    gameIndex.clear();
+    updatePager(0);
     const feed = document.getElementById('games');
     const { nextDay, springStart, openingDay, champ } = await loadOffseason(date);
 
@@ -1233,6 +1509,224 @@
     document.getElementById('ticker-label').textContent = offseason ? 'OFFSEASON' : 'SCHEDULE';
     setTicker(bits.map(b => `<div class="ticker-item">${b}</div>`).join(''), bits.length * 3);
   }
+
+  // --- Box score -----------------------------------------------
+  const GAME_API = 'https://statsapi.mlb.com/api/v1/game';
+  const boxEl = document.getElementById('box');
+  let boxPk = null;
+  let boxTimer = null;
+
+  function openBox(pk) {
+    boxPk = pk;
+    boxEl.innerHTML = '<div class="box-msg">LOADING BOX SCORE…</div>';
+    boxEl.classList.add('open');
+    loadBox();
+  }
+
+  function closeBox() {
+    boxPk = null;
+    clearTimeout(boxTimer);
+    boxEl.classList.remove('open');
+    boxEl.innerHTML = '';
+  }
+
+  async function loadBox() {
+    const pk = boxPk;
+    if (!pk) return;
+    clearTimeout(boxTimer);
+    try {
+      const [bx, ls] = await Promise.all([
+        fetch(`${GAME_API}/${pk}/boxscore`).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
+        fetch(`${GAME_API}/${pk}/linescore`).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      ]);
+      if (pk !== boxPk) return;
+      const scroll = boxEl.scrollTop;
+      boxEl.innerHTML = boxHtml(gameIndex.get(pk), bx, ls);
+      boxEl.scrollTop = scroll;
+    } catch (err) {
+      if (pk !== boxPk) return;
+      console.error('Box score error:', err);
+      boxEl.innerHTML = '<div class="box-top"><button class="nav-btn" data-close>Close ✕</button></div><div class="box-msg">BOX SCORE UNAVAILABLE</div>';
+    }
+    // Keep a live game's box current
+    const g = gameIndex.get(pk);
+    if (pk === boxPk && g && statusBucket(g) === 'live') boxTimer = setTimeout(loadBox, POLL_LIVE);
+  }
+
+  const dash = v => (v === undefined || v === null || v === '') ? '-' : v;
+
+  function boxHtml(g, bx, ls) {
+    const sides = ['away', 'home'];
+    const team = side => bx.teams[side].team;
+    const teamAbbr = side => team(side).abbreviation || (g ? abbr(g.teams[side]) : team(side).name);
+    const isFinal = g ? statusBucket(g) === 'final' : false;
+
+    // Status line
+    let status = g ? (g.status.detailedState || '') : '';
+    const live = g && statusBucket(g) === 'live';
+    if (live) status = `${ls.inningState || ''} ${ls.currentInningOrdinal || ''}`.trim();
+    else if (isFinal && ls.currentInning && ls.currentInning !== (ls.scheduledInnings || 9)) status += ` · ${ls.currentInning} INN`;
+
+    // Line score
+    const innings = ls.innings || [];
+    const n = Math.max(ls.scheduledInnings || 9, innings.length);
+    let lsHead = '<th></th>';
+    for (let i = 1; i <= n; i++) lsHead += `<th>${i}</th>`;
+    lsHead += '<th class="rhe first">R</th><th class="rhe">H</th><th class="rhe">E</th>';
+    const lsRow = side => {
+      let cells = `<td class="team"><span><img src="${logoUrl(team(side).id)}" alt="" onerror="this.style.display='none'"/>${teamAbbr(side)}</span></td>`;
+      for (let i = 0; i < n; i++) {
+        const inn = innings[i];
+        let v = inn && inn[side] ? inn[side].runs : undefined;
+        // Home team didn't need its last at-bat
+        if (v === undefined && side === 'home' && isFinal && inn) v = 'X';
+        cells += `<td>${v ?? ''}</td>`;
+      }
+      const t = ls.teams?.[side] || {};
+      cells += `<td class="rhe first">${t.runs ?? 0}</td><td class="rhe">${t.hits ?? 0}</td><td class="rhe">${t.errors ?? 0}</td>`;
+      return `<tr>${cells}</tr>`;
+    };
+
+    // Decisions + game info
+    const dec = g?.decisions || {};
+    const decHtml = ['winner:W', 'loser:L', 'save:S']
+      .map(k => k.split(':'))
+      .filter(([key]) => dec[key])
+      .map(([key, l]) => `<span class="dec">${l}</span>${dec[key].fullName}`)
+      .join('&nbsp;&nbsp;&nbsp;');
+    const info = (bx.info || []).filter(f => ['First pitch', 'T', 'Att', 'Weather', 'Wind'].includes(f.label));
+    const infoHtml = info.map(f => `<b>${f.label === 'T' ? 'Time' : f.label}:</b> ${String(f.value || '').replace(/\.$/, '')}`).join('&nbsp;&nbsp;·&nbsp;&nbsp;');
+    const venue = g?.venue?.name ? `<b>${g.venue.name}</b>` : '';
+
+    const teamCol = side => {
+      const t = bx.teams[side];
+      const players = id => t.players['ID' + id];
+
+      const batters = (t.batters || []).map(players).filter(p => p && p.battingOrder);
+      const batRows = batters.map(p => {
+        const s = p.stats.batting || {};
+        const pos = (p.allPositions || [p.position]).map(x => x.abbreviation).join('-');
+        const sub = Number(p.battingOrder) % 100 !== 0;
+        return `<tr class="${sub ? 'sub' : ''}">
+          <td>${p.person.boxscoreName || lastName(p.person.fullName)}<span class="pos">${pos}</span></td>
+          <td>${dash(s.atBats)}</td><td>${dash(s.runs)}</td><td>${dash(s.hits)}</td><td>${dash(s.rbi)}</td>
+          <td>${dash(s.baseOnBalls)}</td><td>${dash(s.strikeOuts)}</td>
+          <td class="season">${dash(p.seasonStats?.batting?.avg)}</td></tr>`;
+      }).join('');
+      const tb = t.teamStats?.batting || {};
+      const batTotal = `<tr class="total"><td>Totals</td><td>${dash(tb.atBats)}</td><td>${dash(tb.runs)}</td><td>${dash(tb.hits)}</td><td>${dash(tb.rbi)}</td><td>${dash(tb.baseOnBalls)}</td><td>${dash(tb.strikeOuts)}</td><td></td></tr>`;
+
+      const pitchRows = (t.pitchers || []).map(players).filter(Boolean).map(p => {
+        const s = p.stats.pitching || {};
+        return `<tr>
+          <td>${p.person.boxscoreName || lastName(p.person.fullName)}${s.note ? `<span class="note">${s.note}</span>` : ''}</td>
+          <td>${dash(s.inningsPitched)}</td><td>${dash(s.hits)}</td><td>${dash(s.runs)}</td><td>${dash(s.earnedRuns)}</td>
+          <td>${dash(s.baseOnBalls)}</td><td>${dash(s.strikeOuts)}</td><td>${dash(s.homeRuns)}</td><td>${dash(s.numberOfPitches)}</td>
+          <td class="season">${dash(p.seasonStats?.pitching?.era)}</td></tr>`;
+      }).join('');
+
+      // Extra-base hits, homers, steals, errors from the box notes
+      const keep = ['2B', '3B', 'HR', 'SB', 'E'];
+      const notes = (t.info || []).flatMap(sec => sec.fieldList || [])
+        .filter(f => keep.includes(f.label))
+        .map(f => `<b>${f.label}:</b> ${f.value}`).join(' ');
+
+      return `
+        <div class="box-team">
+          <h3><img src="${logoUrl(team(side).id)}" alt="" onerror="this.style.display='none'"/>${team(side).name}</h3>
+          <table class="stats">
+            <tr><th>Batting</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>K</th><th>AVG</th></tr>
+            ${batRows || '<tr><td colspan="8">Lineup not posted</td></tr>'}
+            ${batRows ? batTotal : ''}
+          </table>
+          <table class="stats">
+            <tr><th>Pitching</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th><th>HR</th><th>PC</th><th>ERA</th></tr>
+            ${pitchRows || '<tr><td colspan="10">-</td></tr>'}
+          </table>
+          ${notes ? `<div class="box-notes">${notes}</div>` : ''}
+        </div>`;
+    };
+
+    const title = `${team('away').teamName || team('away').name} at ${team('home').teamName || team('home').name}`;
+
+    return `
+      <div class="box-top">
+        <div class="box-title">${title}</div>
+        <div class="box-status ${live ? 'live' : ''}">${status}</div>
+        ${g ? seriesTag(g) : ''}
+        <button class="nav-btn" data-close>Close ✕</button>
+      </div>
+      <div class="box-head">
+        <table class="ls">
+          <tr>${lsHead}</tr>
+          ${lsRow('away')}
+          ${lsRow('home')}
+        </table>
+        <div class="box-info">
+          ${decHtml ? `<div>${decHtml}</div>` : ''}
+          ${g && seriesStatus(g) ? `<div><b>${seriesStatus(g)}</b></div>` : ''}
+          ${venue ? `<div>${venue}</div>` : ''}
+          ${infoHtml ? `<div>${infoHtml}</div>` : ''}
+        </div>
+      </div>
+      <div class="box-cols">
+        ${sides.map(teamCol).join('')}
+      </div>`;
+  }
+
+  // --- Navigation ---------------------------------------------
+  function goToDate(iso, push = true) {
+    dateOverride = iso === todayBoardDate() ? null : iso;
+    if (push) {
+      const url = new URL(location.href);
+      if (dateOverride) url.searchParams.set('date', dateOverride);
+      else url.searchParams.delete('date');
+      history.pushState(null, '', url);
+    }
+    closeBox();
+    previousScores.clear();
+    previousGameKeys = new Set();
+    currentPage = 0;
+    updateClock();
+    document.getElementById('games').innerHTML = '<div class="loading">LOADING…</div>';
+    fetchGames();
+  }
+
+  window.addEventListener('popstate', () => goToDate(dateFromUrl() || todayBoardDate(), false));
+
+  document.getElementById('day-prev').addEventListener('click', () => goToDate(addDays(boardDate(), -1)));
+  document.getElementById('day-next').addEventListener('click', () => goToDate(addDays(boardDate(), 1)));
+  document.getElementById('day-today').addEventListener('click', () => goToDate(todayBoardDate()));
+  document.getElementById('pager').addEventListener('click', e => {
+    const b = e.target.closest('[data-page]');
+    if (b) setPage(currentPage + Number(b.dataset.page));
+  });
+
+  document.getElementById('games').addEventListener('click', e => {
+    const card = e.target.closest('.game.clickable');
+    if (card) openBox(Number(card.dataset.gamepk));
+  });
+
+  boxEl.addEventListener('click', e => {
+    if (e.target.closest('[data-close]')) closeBox();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeBox();
+    else if (boxPk) return;
+    else if (e.key === 'ArrowLeft') goToDate(addDays(boardDate(), -1));
+    else if (e.key === 'ArrowRight') goToDate(addDays(boardDate(), 1));
+    else if (e.key === 'PageDown') setPage(currentPage + 1);
+    else if (e.key === 'PageUp') setPage(currentPage - 1);
+  });
+
+  ['pointerdown', 'keydown', 'wheel'].forEach(ev =>
+    document.addEventListener(ev, () => { lastInteraction = Date.now(); }, { passive: true }));
+
+  // Heavy days: rotate pages when the board is unattended
+  setInterval(() => {
+    if (!boxPk && Date.now() - lastInteraction > IDLE_BEFORE_ROTATE) setPage(currentPage + 1);
+  }, PAGE_ROTATE);
 
   // --- Boot + poll --------------------------------------------
   fetchGames();
