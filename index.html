@@ -538,6 +538,22 @@
 
   .pitcher-info .series { color: var(--accent-text); font-weight: 700; }
 
+  .tv-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text);
+    text-align: right;
+    max-width: 55%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tv-info .label, .pitcher-info .tv .label { color: var(--dim); margin-right: 6px; }
+  .pitcher-info .tv { color: var(--text); font-weight: 700; }
+
   /* Footer ticker */
   footer {
     display: flex;
@@ -1290,6 +1306,43 @@
     return `${lead} ${lw >= toWin ? 'WINS' : 'LEADS'} ${lw}-${tw}`;
   }
 
+  // --- Broadcasts ----------------------------------------------
+  // "FOX / FOX ONE" -> "FOX", "TBS (out-of-market only)" -> "TBS", drops sponsor tags
+  function shortNetwork(name) {
+    return (name || '').split('/')[0].replace(/\s*\(.*?\)/g, '').replace(/\s+presented by.*$/i, '').trim();
+  }
+
+  const uniq = arr => [...new Set(arr)];
+
+  // Card label: the national network if there is one, otherwise both local channels (away / home)
+  function tvLabel(g) {
+    const tv = (g.broadcasts || []).filter(b => b.type === 'TV' && (b.language || 'en') === 'en');
+    if (!tv.length) return '';
+    const national = uniq(tv.filter(b => b.isNational).map(b => shortNetwork(b.name)));
+    if (national.length) return national.join(' / ');
+    const local = side => uniq(tv.filter(b => b.homeAway === side).map(b => shortNetwork(b.name)));
+    return uniq([...local('away'), ...local('home')]).join(' / ');
+  }
+
+  // Box score lines: national, then each team's feeds; non-English marked (ES), (FR)
+  function broadcastLine(g, isType, radio) {
+    const list = (g.broadcasts || []).filter(b => isType(b.type));
+    if (!list.length) return '';
+    // Radio names carry the frequency after the slash ("WQBN/1300AM"), so keep it
+    const clean = b => radio ? b.name.replace(/\s*\/\s*/g, ' ').trim() : shortNetwork(b.name);
+    const label = b => clean(b) + (b.language && b.language !== 'en' ? ` (${b.language.toUpperCase()})` : '');
+    const fmt = items => uniq(items.map(label)).join(', ');
+    const groups = [];
+    const national = list.filter(b => b.isNational);
+    const nationalNames = new Set(national.map(label));
+    if (national.length) groups.push(`National: ${fmt(national)}`);
+    ['away', 'home'].forEach(side => {
+      const mine = list.filter(b => !b.isNational && b.homeAway === side && !nationalNames.has(label(b)));
+      if (mine.length) groups.push(`${abbr(g.teams[side])}: ${fmt(mine)}`);
+    });
+    return groups.join('&nbsp;&nbsp;·&nbsp;&nbsp;');
+  }
+
   function subtitleFor(games) {
     const types = new Set(games.map(g => g.gameType));
     if (types.size === 1) {
@@ -1310,7 +1363,7 @@
     clearTimeout(pollTimer);
     const seq = ++fetchSeq;
     const date = boardDate();
-    const url = `${API}?sportId=1&date=${date}&gameType=${GAME_TYPES}&hydrate=linescore,team,probablePitcher,decisions`;
+    const url = `${API}?sportId=1&date=${date}&gameType=${GAME_TYPES}&hydrate=linescore,team,probablePitcher,decisions,broadcasts(all)`;
     let next = POLL_IDLE;
     let ok = false;
     try {
@@ -1455,6 +1508,7 @@
       let footerHtml = '';
       const series = seriesStatus(g);
       const seriesLine = series ? `<div class="series">${series}</div>` : '';
+      const tv = tvLabel(g);
       if (bucket === 'live') {
         // Between half-innings the feed still reports the last out and runners; show a clean slate
         const midBreak = ls.inningState === 'Middle' || ls.inningState === 'End';
@@ -1462,7 +1516,7 @@
         const bases = midBreak ? {} : (ls.offense || {});
         const showCount = !midBreak;
         footerHtml = `
-          <div class="pitcher-info">${seriesLine}</div>
+          <div class="pitcher-info">${seriesLine}${tv ? `<div class="tv"><span class="label">TV</span>${tv}</div>` : ''}</div>
           <div class="diamond-wrap">
             ${showCount ? `<div class="count">${ls.balls ?? 0}-${ls.strikes ?? 0}</div>` : ''}
             <div class="diamond">
@@ -1480,7 +1534,8 @@
         const awayP = away.probablePitcher?.fullName;
         const homeP = home.probablePitcher?.fullName;
         const pitchers = (awayP || homeP) ? `<div>${lastName(awayP)} vs ${lastName(homeP)}</div>` : '';
-        if (pitchers || seriesLine) footerHtml = `<div class="pitcher-info">${seriesLine}${pitchers}</div>`;
+        const tvHtml = tv ? `<div class="tv-info"><span class="label">TV</span>${tv}</div>` : '';
+        if (pitchers || seriesLine || tvHtml) footerHtml = `<div class="pitcher-info">${seriesLine}${pitchers}</div>${tvHtml}`;
       } else if (!off) {
         const w = g.decisions?.winner?.fullName;
         const l = g.decisions?.loser?.fullName;
@@ -1781,6 +1836,8 @@
     const info = (bx.info || []).filter(f => ['First pitch', 'T', 'Att', 'Weather', 'Wind'].includes(f.label));
     const infoHtml = info.map(f => `<b>${f.label === 'T' ? 'Time' : f.label}:</b> ${String(f.value || '').replace(/\.$/, '')}`).join('&nbsp;&nbsp;·&nbsp;&nbsp;');
     const venue = g?.venue?.name ? `<b>${g.venue.name}</b>` : '';
+    const tvLine = g ? broadcastLine(g, t => t === 'TV') : '';
+    const radioLine = g ? broadcastLine(g, t => t === 'AM' || t === 'FM', true) : '';
 
     const teamCol = side => {
       const t = bx.teams[side];
@@ -1851,6 +1908,8 @@
           ${decHtml ? `<div>${decHtml}</div>` : ''}
           ${g && seriesStatus(g) ? `<div><b>${seriesStatus(g)}</b></div>` : ''}
           ${venue ? `<div>${venue}</div>` : ''}
+          ${tvLine ? `<div><b>TV:</b> ${tvLine}</div>` : ''}
+          ${radioLine ? `<div><b>Radio:</b> ${radioLine}</div>` : ''}
           ${infoHtml ? `<div>${infoHtml}</div>` : ''}
         </div>
       </div>
