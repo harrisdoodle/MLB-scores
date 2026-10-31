@@ -20,6 +20,38 @@
     --upcoming: #f4b942;
     --diamond-on: #ffd84a;
     --diamond-off: rgba(255,255,255,0.12);
+    --accent-text: #ffd84a;          /* gold used as text (series, notes, scores in ticker) */
+    --line-strong: rgba(255,255,255,0.18);
+    --glow-1: rgba(255,59,59,0.06);
+    --glow-2: rgba(244,185,66,0.04);
+    --live-border: rgba(255,59,59,0.25);
+    --gold-border: rgba(255,216,74,0.3);
+    --logo-shadow: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    --overlay-shadow: 0 30px 80px rgba(0,0,0,0.7);
+    color-scheme: dark;
+  }
+
+  :root[data-theme="light"] {
+    --bg: #eef1f5;
+    --panel: #ffffff;
+    --panel-2: #f3f5f8;
+    --line: rgba(15,23,42,0.08);
+    --text: #0b1220;
+    --dim: #5b6475;
+    --live: #e11d2e;
+    --final: #9aa1ad;
+    --upcoming: #c98a00;
+    --diamond-on: #f5b800;
+    --diamond-off: rgba(15,23,42,0.1);
+    --accent-text: #a26f00;
+    --line-strong: rgba(15,23,42,0.2);
+    --glow-1: rgba(225,29,46,0.07);
+    --glow-2: rgba(201,138,0,0.06);
+    --live-border: rgba(225,29,46,0.35);
+    --gold-border: rgba(162,111,0,0.35);
+    --logo-shadow: drop-shadow(0 1px 2px rgba(15,23,42,0.15));
+    --overlay-shadow: 0 30px 80px rgba(15,23,42,0.25);
+    color-scheme: light;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,8 +71,8 @@
     inset: 0;
     overflow: hidden;
     background:
-      radial-gradient(circle at 20% 0%, rgba(255,59,59,0.06), transparent 40%),
-      radial-gradient(circle at 100% 100%, rgba(244,185,66,0.04), transparent 40%),
+      radial-gradient(circle at 20% 0%, var(--glow-1), transparent 40%),
+      radial-gradient(circle at 100% 100%, var(--glow-2), transparent 40%),
       var(--bg);
   }
 
@@ -76,6 +108,7 @@
     width: 72px;
     height: 72px;
     border-radius: 14px;
+    color: #fff;
     background: linear-gradient(135deg, #ff3b3b 0%, #b80d0d 100%);
     display: grid;
     place-items: center;
@@ -159,27 +192,40 @@
   .clock {
     font-family: 'Oswald', sans-serif;
     font-weight: 600;
-    font-size: 36px;
+    font-size: 34px;
     line-height: 1;
     letter-spacing: -0.5px;
   }
 
   .date {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 15px;
+    font-weight: 700;
     color: var(--dim);
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
-  .date .archive { color: var(--upcoming); }
+  .date .archive { color: var(--accent-text); }
 
   /* Day navigation + pager */
   .date-nav {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
+
+  .header-right { position: relative; }
+
+  .date-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+  }
+
+  .date-btn svg, .theme-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
 
   .nav-btn {
     font-family: 'JetBrains Mono', monospace;
@@ -190,15 +236,20 @@
     color: var(--text);
     background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 6px;
-    height: 26px;
-    min-width: 26px;
-    padding: 0 8px;
+    border-radius: 8px;
+    height: 42px;
+    min-width: 42px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     transition: border-color 0.2s ease, background 0.2s ease;
   }
 
-  .nav-btn:hover { border-color: rgba(255,255,255,0.3); background: var(--panel-2); }
+  .nav-btn:hover { border-color: var(--line-strong); background: var(--panel-2); }
+  .nav-btn.arrow { font-size: 20px; padding: 0; }
+  .stat-chip.pager .nav-btn { height: 30px; min-width: 30px; font-size: 18px; padding: 0; }
   .nav-btn[hidden], .stat-chip[hidden] { display: none; }
 
   .stat-chip.pager .value {
@@ -244,9 +295,9 @@
 
   .game.live::before { background: var(--live); box-shadow: 0 0 20px var(--live); }
   .game.upcoming::before { background: var(--upcoming); }
-  .game.live { border-color: rgba(255,59,59,0.25); }
+  .game.live { border-color: var(--live-border); }
   .game.clickable { cursor: pointer; }
-  .game.clickable:hover { border-color: rgba(255,255,255,0.22); background: var(--panel-2); }
+  .game.clickable:hover { border-color: var(--line-strong); background: var(--panel-2); }
 
   .game-header {
     display: flex;
@@ -305,7 +356,7 @@
     white-space: nowrap;
   }
 
-  .tag.post { color: var(--diamond-on); border-color: rgba(255,216,74,0.3); }
+  .tag.post { color: var(--accent-text); border-color: var(--gold-border); }
 
   .inning-info {
     font-family: 'JetBrains Mono', monospace;
@@ -355,7 +406,7 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    filter: var(--logo-shadow);
   }
 
   .team-name {
@@ -390,7 +441,7 @@
   }
 
   @keyframes scoreFlash {
-    0%   { color: #ffd84a; text-shadow: 0 0 20px #ffd84a; transform: scale(1.15); }
+    0%   { color: var(--accent-text); text-shadow: 0 0 20px var(--diamond-on); transform: scale(1.15); }
     100% { color: var(--text); text-shadow: none; transform: scale(1); }
   }
 
@@ -435,7 +486,7 @@
     height: 10px;
     transform: rotate(45deg);
     background: var(--diamond-off);
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid var(--line-strong);
     transition: background 0.3s ease, box-shadow 0.3s ease;
   }
 
@@ -458,7 +509,7 @@
     height: 8px;
     border-radius: 50%;
     background: var(--diamond-off);
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid var(--line-strong);
   }
 
   .out.on { background: var(--diamond-on); }
@@ -485,7 +536,7 @@
     margin-right: 4px;
   }
 
-  .pitcher-info .series { color: var(--diamond-on); font-weight: 700; }
+  .pitcher-info .series { color: var(--accent-text); font-weight: 700; }
 
   /* Footer ticker */
   footer {
@@ -538,7 +589,7 @@
 
   .ticker-item .separator { color: var(--live); margin: 0 10px; }
   .ticker-item .team-abbr { font-weight: 700; }
-  .ticker-item .score-val { color: #ffd84a; font-weight: 700; }
+  .ticker-item .score-val { color: var(--accent-text); font-weight: 700; }
 
   @keyframes ticker {
     0% { transform: translateX(0); }
@@ -591,7 +642,7 @@
     gap: 28px;
     padding: 24px 40px 24px 28px;
     background: var(--panel);
-    border: 1px solid rgba(255,216,74,0.25);
+    border: 1px solid var(--gold-border);
     border-radius: 14px;
     position: relative;
     overflow: hidden;
@@ -613,7 +664,7 @@
     font-size: 13px;
     font-weight: 700;
     letter-spacing: 3px;
-    color: var(--diamond-on);
+    color: var(--accent-text);
     text-transform: uppercase;
     text-align: left;
   }
@@ -692,6 +743,108 @@
     letter-spacing: 2px;
   }
 
+  /* Calendar popover */
+  #cal {
+    position: absolute;
+    top: 150px;
+    right: 48px;
+    z-index: 20;
+    width: 560px;
+    display: none;
+    padding: 20px;
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    box-shadow: var(--overlay-shadow);
+  }
+
+  #cal.open { display: block; animation: gameIn 0.2s ease-out; }
+
+  .cal-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .cal-head select {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 22px;
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    height: 42px;
+    padding: 0 10px;
+    cursor: pointer;
+  }
+
+  .cal-head .spacer { flex: 1; }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+
+  .cal-dow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--dim);
+    text-align: center;
+    padding-bottom: 4px;
+  }
+
+  .cal-day {
+    height: 62px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    font-family: 'Oswald', sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1;
+    transition: border-color 0.15s ease;
+  }
+
+  .cal-day:hover { border-color: var(--line-strong); }
+  .cal-day small {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--accent-text);
+  }
+  .cal-day.none { color: var(--dim); background: transparent; }
+  .cal-day.none small { color: var(--dim); }
+  .cal-day.today { border-color: var(--live); }
+  .cal-day.selected { background: var(--live); border-color: var(--live); color: #fff; }
+  .cal-day.selected small { color: #fff; }
+  .cal-day:disabled { opacity: 0.25; cursor: default; }
+
+  .cal-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
   /* Box score overlay */
   #box {
     position: absolute;
@@ -705,9 +858,9 @@
     gap: 18px;
     padding: 22px 28px;
     background: var(--bg);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid var(--line-strong);
     border-radius: 14px;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+    box-shadow: var(--overlay-shadow);
     overflow: auto;
   }
 
@@ -722,7 +875,7 @@
   .box-title {
     font-family: 'Archivo', sans-serif;
     font-weight: 900;
-    font-size: 26px;
+    font-size: 30px;
     letter-spacing: -0.5px;
     text-transform: uppercase;
   }
@@ -738,7 +891,7 @@
 
   .box-status.live { color: var(--live); }
   .box-top .tag { margin-left: 0; }
-  .box-top .nav-btn { margin-left: auto; height: 34px; font-size: 13px; padding: 0 14px; }
+  .box-top .nav-btn { margin-left: auto; font-size: 14px; padding: 0 16px; }
 
   .box-head {
     display: grid;
@@ -777,12 +930,12 @@
   table.ls td.team span { display: flex; align-items: center; gap: 10px; }
   table.ls td.team img { width: 28px; height: 28px; object-fit: contain; }
   table.ls .rhe { font-weight: 700; }
-  table.ls .rhe.first { border-left: 1px solid rgba(255,255,255,0.15); }
-  table.ls td.rhe.first { color: var(--diamond-on); }
+  table.ls .rhe.first { border-left: 1px solid var(--line-strong); }
+  table.ls td.rhe.first { color: var(--accent-text); }
 
   .box-info {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.8;
     color: var(--dim);
     letter-spacing: 0.5px;
@@ -815,19 +968,19 @@
     width: 100%;
     border-collapse: collapse;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 14px;
   }
 
   table.stats + table.stats { margin-top: 12px; }
 
   table.stats th {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 1px;
     color: var(--dim);
     text-align: right;
-    padding: 4px 6px;
-    border-bottom: 1px solid rgba(255,255,255,0.12);
+    padding: 5px 6px;
+    border-bottom: 1px solid var(--line-strong);
   }
 
   table.stats td {
@@ -837,15 +990,15 @@
   }
 
   table.stats th:first-child, table.stats td:first-child { text-align: left; width: 40%; }
-  table.stats td .pos { color: var(--dim); margin-left: 6px; font-size: 10px; }
-  table.stats td .note { color: var(--diamond-on); margin-left: 6px; font-size: 10px; }
+  table.stats td .pos { color: var(--dim); margin-left: 6px; font-size: 11px; }
+  table.stats td .note { color: var(--accent-text); margin-left: 6px; font-size: 11px; }
   table.stats tr.sub td:first-child { padding-left: 20px; }
   table.stats td.season { color: var(--dim); }
   table.stats tr.total td { font-weight: 700; border-bottom: none; }
 
   .box-notes {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 13px;
     line-height: 1.6;
     color: var(--dim);
     margin-top: 8px;
@@ -906,10 +1059,11 @@
       <div class="header-right">
         <div class="clock" id="clock">-:--</div>
         <div class="date-nav">
-          <button class="nav-btn" id="day-prev" aria-label="Previous day">‹</button>
-          <div class="date" id="date"></div>
-          <button class="nav-btn" id="day-next" aria-label="Next day">›</button>
+          <button class="nav-btn arrow" id="day-prev" aria-label="Previous day">‹</button>
+          <button class="nav-btn date-btn" id="cal-btn" aria-label="Pick a date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="date" id="date"></span></button>
+          <button class="nav-btn arrow" id="day-next" aria-label="Next day">›</button>
           <button class="nav-btn" id="day-today" hidden>Today</button>
+          <button class="nav-btn theme-btn" id="theme-btn" aria-label="Toggle light and dark"></button>
         </div>
       </div>
     </header>
@@ -928,6 +1082,7 @@
     </footer>
 
     <section id="box"></section>
+    <section id="cal"></section>
   </div>
 </div>
 
@@ -940,7 +1095,10 @@
      URL params:
        ?date=YYYY-MM-DD   show a specific day (archive / testing)
 
+     ?theme=light|dark  force a theme (otherwise the toggle's last choice)
+
      Controls: ‹ › in the header (or arrow keys) step through days,
+     the date opens a calendar (back to 1901-04-18),
      the PAGE chip pages past 12 games, click a game for its box score
      (Esc closes).
      ========================================================= */
@@ -963,9 +1121,34 @@
     W: { short: 'WS', long: 'World Series' }
   };
 
+  const FIRST_DATE = '1901-04-18';   // earliest game day in the Stats API (modern AL/NL)
+
+  // --- Theme --------------------------------------------------
+  const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    // Show the icon for the theme you'd switch to
+    document.getElementById('theme-btn').innerHTML = theme === 'light' ? MOON : SUN;
+  }
+
+  function initialTheme() {
+    const fromUrl = new URLSearchParams(location.search).get('theme');
+    if (fromUrl === 'light' || fromUrl === 'dark') return fromUrl;
+    try { return localStorage.getItem('kk-theme') || 'dark'; } catch (e) { return 'dark'; }
+  }
+
+  applyTheme(initialTheme());
+  document.getElementById('theme-btn').addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    applyTheme(next);
+    try { localStorage.setItem('kk-theme', next); } catch (e) { /* private mode */ }
+  });
+
   function dateFromUrl() {
     const d = new URLSearchParams(location.search).get('date') || '';
-    return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
+    return /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= FIRST_DATE ? d : null;
   }
   let dateOverride = dateFromUrl();
 
@@ -1023,7 +1206,8 @@
     const label = prettyDate(iso, dateOverride
       ? { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }
       : undefined);
-    dateEl.innerHTML = dateOverride ? `<span class="archive">ARCHIVE</span> · ${label}` : label;
+    dateEl.innerHTML = dateOverride ? `<span class="archive">${label}</span>` : label;
+    document.getElementById('cal-btn').title = dateOverride ? 'Archive date: pick another day' : 'Pick a date';
     document.getElementById('day-today').hidden = !dateOverride;
   }
   updateClock();
@@ -1329,7 +1513,7 @@
               <div class="team-meta">${[metaText(side), which].filter(Boolean).join(' · ')}</div>
             </div>
             <div class="score" data-team="${which.toLowerCase()}">${started ? runs : ''}</div>
-            <div class="hits">${started ? `${hits}<small>H</small>` : ''}</div>
+            <div class="hits">${started && hits !== '-' ? `${hits}<small>H</small>` : ''}</div>
           </div>`;
 
       card.innerHTML = `
@@ -1621,7 +1805,7 @@
         return `<tr>
           <td>${p.person.boxscoreName || lastName(p.person.fullName)}${s.note ? `<span class="note">${s.note}</span>` : ''}</td>
           <td>${dash(s.inningsPitched)}</td><td>${dash(s.hits)}</td><td>${dash(s.runs)}</td><td>${dash(s.earnedRuns)}</td>
-          <td>${dash(s.baseOnBalls)}</td><td>${dash(s.strikeOuts)}</td><td>${dash(s.homeRuns)}</td><td>${dash(s.numberOfPitches)}</td>
+          <td>${dash(s.baseOnBalls)}</td><td>${dash(s.strikeOuts)}</td><td>${dash(s.homeRuns)}</td><td>${s.numberOfPitches ? s.numberOfPitches : '-'}</td>
           <td class="season">${dash(p.seasonStats?.pitching?.era)}</td></tr>`;
       }).join('');
 
@@ -1648,6 +1832,7 @@
     };
 
     const title = `${team('away').teamName || team('away').name} at ${team('home').teamName || team('home').name}`;
+    const hasLines = sides.some(side => (bx.teams[side].batters || []).length);
 
     return `
       <div class="box-top">
@@ -1669,13 +1854,122 @@
           ${infoHtml ? `<div>${infoHtml}</div>` : ''}
         </div>
       </div>
-      <div class="box-cols">
-        ${sides.map(teamCol).join('')}
-      </div>`;
+      ${hasLines
+        ? `<div class="box-cols">${sides.map(teamCol).join('')}</div>`
+        : '<div class="box-msg">NO BATTING OR PITCHING LINES ON RECORD FOR THIS GAME</div>'}`;
   }
+
+  // --- Calendar -----------------------------------------------
+  const calEl = document.getElementById('cal');
+  const monthCounts = new Map();     // 'YYYY-MM' -> {date: totalGames}
+  let calMonth = null;               // 'YYYY-MM' currently shown
+
+  function openCal() {
+    calMonth = boardDate().slice(0, 7);
+    calEl.classList.add('open');
+    renderCal();
+  }
+
+  function closeCal() {
+    calEl.classList.remove('open');
+  }
+
+  async function monthGameCounts(ym) {
+    if (monthCounts.has(ym)) return monthCounts.get(ym);
+    const [y, m] = ym.split('-').map(Number);
+    const last = new Date(y, m, 0).getDate();
+    const url = `${API}?sportId=1&startDate=${ym}-01&endDate=${ym}-${pad(last)}&gameType=${GAME_TYPES}&fields=dates,date,totalGames`;
+    const counts = {};
+    try {
+      const data = await (await fetch(url)).json();
+      (data.dates || []).forEach(d => { counts[d.date] = d.totalGames; });
+      monthCounts.set(ym, counts);
+    } catch (err) {
+      console.error('Calendar error:', err);
+    }
+    return counts;
+  }
+
+  function shiftMonth(ym, n) {
+    const [y, m] = ym.split('-').map(Number);
+    const d = new Date(y, m - 1 + n, 1);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+  }
+
+  async function renderCal() {
+    const ym = calMonth;
+    const [y, m] = ym.split('-').map(Number);
+    const firstYear = Number(FIRST_DATE.slice(0, 4));
+    const lastYear = new Date().getFullYear() + 1;
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    let years = '';
+    for (let yr = lastYear; yr >= firstYear; yr--) years += `<option value="${yr}" ${yr === y ? 'selected' : ''}>${yr}</option>`;
+    const months = monthNames.map((n, i) => `<option value="${i + 1}" ${i + 1 === m ? 'selected' : ''}>${n}</option>`).join('');
+
+    const draw = counts => {
+      const start = new Date(y, m - 1, 1).getDay();
+      const days = new Date(y, m, 0).getDate();
+      const today = todayBoardDate();
+      const selected = boardDate();
+      let cells = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => `<div class="cal-dow">${d}</div>`).join('');
+      for (let i = 0; i < start; i++) cells += '<div></div>';
+      for (let d = 1; d <= days; d++) {
+        const iso = `${ym}-${pad(d)}`;
+        const n = counts ? counts[iso] : undefined;
+        const cls = ['cal-day', counts && !n ? 'none' : '', iso === today ? 'today' : '', iso === selected ? 'selected' : ''].join(' ');
+        const label = counts ? (n ? `${n} G` : '·') : '';
+        cells += `<button class="${cls}" data-date="${iso}" ${iso < FIRST_DATE ? 'disabled' : ''}>${d}<small>${label}</small></button>`;
+      }
+      calEl.innerHTML = `
+        <div class="cal-head">
+          <button class="nav-btn arrow" data-month="-1" aria-label="Previous month" ${ym <= FIRST_DATE.slice(0, 7) ? 'disabled' : ''}>‹</button>
+          <select id="cal-m" aria-label="Month">${months}</select>
+          <select id="cal-y" aria-label="Year">${years}</select>
+          <button class="nav-btn arrow" data-month="1" aria-label="Next month">›</button>
+          <div class="spacer"></div>
+          <button class="nav-btn" data-cal-close aria-label="Close calendar">✕</button>
+        </div>
+        <div class="cal-grid">${cells}</div>
+        <div class="cal-foot"><span>Number = games that day</span><span>Back to ${monthNames[3]} 18, ${firstYear}</span></div>`;
+    };
+
+    draw(monthCounts.get(ym) || null);
+    if (!monthCounts.has(ym)) {
+      const counts = await monthGameCounts(ym);
+      if (calMonth === ym && calEl.classList.contains('open')) draw(counts);
+    }
+  }
+
+  calEl.addEventListener('click', e => {
+    const day = e.target.closest('[data-date]');
+    const mon = e.target.closest('[data-month]');
+    if (day && !day.disabled) { closeCal(); goToDate(day.dataset.date); }
+    else if (mon && !mon.disabled) { calMonth = shiftMonth(calMonth, Number(mon.dataset.month)); renderCal(); }
+    else if (e.target.closest('[data-cal-close]')) closeCal();
+  });
+
+  calEl.addEventListener('change', () => {
+    const y = document.getElementById('cal-y').value;
+    const m = document.getElementById('cal-m').value;
+    calMonth = `${y}-${pad(m)}`;
+    if (calMonth < FIRST_DATE.slice(0, 7)) calMonth = FIRST_DATE.slice(0, 7);
+    renderCal();
+  });
+
+  document.getElementById('cal-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    calEl.classList.contains('open') ? closeCal() : openCal();
+  });
+
+  // Click outside the calendar closes it
+  document.addEventListener('click', e => {
+    if (calEl.classList.contains('open') && !calEl.contains(e.target) && !e.target.closest('#cal-btn')) closeCal();
+  });
 
   // --- Navigation ---------------------------------------------
   function goToDate(iso, push = true) {
+    if (iso < FIRST_DATE) iso = FIRST_DATE;
     dateOverride = iso === todayBoardDate() ? null : iso;
     if (push) {
       const url = new URL(location.href);
@@ -1712,8 +2006,8 @@
   });
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeBox();
-    else if (boxPk) return;
+    if (e.key === 'Escape') { closeCal(); closeBox(); }
+    else if (boxPk || calEl.classList.contains('open') || e.target.tagName === 'SELECT') return;
     else if (e.key === 'ArrowLeft') goToDate(addDays(boardDate(), -1));
     else if (e.key === 'ArrowRight') goToDate(addDays(boardDate(), 1));
     else if (e.key === 'PageDown') setPage(currentPage + 1);
@@ -1725,7 +2019,7 @@
 
   // Heavy days: rotate pages when the board is unattended
   setInterval(() => {
-    if (!boxPk && Date.now() - lastInteraction > IDLE_BEFORE_ROTATE) setPage(currentPage + 1);
+    if (!boxPk && !calEl.classList.contains('open') && Date.now() - lastInteraction > IDLE_BEFORE_ROTATE) setPage(currentPage + 1);
   }, PAGE_ROTATE);
 
   // --- Boot + poll --------------------------------------------
