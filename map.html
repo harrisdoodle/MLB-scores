@@ -393,6 +393,108 @@
     margin-top: 6px;
   }
 
+  /* Google Earth fly-in */
+  #earth { position: absolute; inset: 0; display: none; background: #000; }
+  #earth canvas { display: block; }
+  body.flying #earth { display: block; }
+  /* Scrims keep the header and credits readable over the imagery */
+  #earth::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, rgba(5,8,12,0.75) 0, rgba(5,8,12,0) 200px),
+      linear-gradient(to top, rgba(5,8,12,0.55) 0, rgba(5,8,12,0) 90px);
+  }
+  body.flying header .title { color: #fff; }
+  body.flying header .subtitle { color: rgba(255,255,255,0.75); }
+  body.flying .clock { color: #fff; }
+  body.flying #scene, body.flying #lines, body.flying #labels, body.flying #cards, body.flying #banner { display: none; }
+  body.flying .header-center { visibility: hidden; }
+
+  #fly {
+    position: absolute;
+    left: 48px;
+    top: 168px;
+    width: 420px;
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 6;
+  }
+
+  body.flying #fly { display: flex; }
+
+  .fly-venue {
+    padding: 18px 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    box-shadow: var(--overlay-shadow);
+  }
+
+  .fly-venue h2 {
+    font-weight: 900;
+    font-size: 34px;
+    line-height: 1;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+  }
+
+  .fly-venue .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  .fly-venue .wx { position: static; display: inline-flex; margin-top: 12px; box-shadow: none; }
+
+  #fly .mcard { position: relative; width: 100%; cursor: default; }
+  #fly .mcard .mc-row { height: 40px; grid-template-columns: 34px 1fr auto; }
+  #fly .mcard .mc-row img { width: 34px; height: 34px; }
+  #fly .mcard .mc-row .tm { font-size: 28px; }
+  #fly .mcard .mc-row .sc { font-size: 34px; }
+  #fly .mcard .mc-head { font-size: 13px; }
+  #fly .mcard .mc-foot { font-size: 12px; }
+
+  .fly-actions { display: flex; gap: 10px; }
+  .fly-actions .nav-btn { flex: 1; }
+
+  #fly-status {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    display: none;
+    z-index: 6;
+  }
+
+  #google-credit {
+    position: absolute;
+    left: 16px;
+    bottom: 12px;
+    display: none;
+    align-items: flex-end;
+    gap: 12px;
+    max-width: 1400px;
+    z-index: 6;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  }
+
+  body.flying #google-credit { display: flex; }
+  #google-credit img { height: 18px; }
+
   #loading {
     position: absolute;
     inset: 0;
@@ -405,7 +507,12 @@
   }
 </style>
 <script type="importmap">
-  { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
 </script>
 </head>
 <body>
@@ -416,6 +523,10 @@
     <div id="labels"></div>
     <div id="cards"></div>
     <div id="banner"></div>
+    <div id="earth"></div>
+    <div id="fly"></div>
+    <div id="fly-status">LOADING GOOGLE EARTH…</div>
+    <div id="google-credit"><img src="https://maps.gstatic.com/mapfiles/api-3/images/google_white5.png" alt="Google"/><span id="google-attr"></span></div>
     <div id="loading">LOADING MAP…</div>
 
     <header>
@@ -767,6 +878,7 @@
       entry = {
         id: v.id, name: v.name, city: v.location?.city || '', lat: c.latitude, lon: c.longitude,
         roof: v.fieldInfo?.roofType || 'Open', onMap, home: p ? [p[0], p[1]] : [0, 0],
+        elevFt: v.location?.elevation ?? 0, azimuth: v.location?.azimuthAngle ?? 0,
         x: p ? p[0] : 0, z: p ? p[1] : 0, model: null, games: []
       };
       venues.set(v.id, entry);
@@ -1077,9 +1189,7 @@
       let el = cardEls.get(g.gamePk);
       if (!el) {
         el = document.createElement('div');
-        el.addEventListener('click', () => {
-          location.href = `index.html?date=${boardDate()}&game=${g.gamePk}`;
-        });
+        el.addEventListener('click', () => flyTo(g.gamePk));
         cards.appendChild(el);
         cardEls.set(g.gamePk, el);
       }
@@ -1125,6 +1235,7 @@
     }
 
     document.getElementById('banner').style.display = 'none';
+    if (fly) renderFlyPanel();
   }
 
   async function renderEmpty(date) {
@@ -1140,11 +1251,148 @@
     banner.style.display = 'block';
   }
 
+  // --- Google Earth fly-in --------------------------------------------
+  // Photorealistic 3D Tiles. The key only works from harrisdoodle.github.io/MLB-scores/ (and the
+  // local test server) and only for the Map Tiles API. The library loads on the first fly-in, so a
+  // billable session only starts when someone actually opens one. Google imagery never shares the
+  // view with the stylized map, per Google's terms.
+  const GOOGLE_TILES_KEY = 'AIzaSyCu1sbXNMHN6dEVJuvGNRTBJwRvbbPDSKg';
+  const TILES_LIB = 'https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.2/build';
+  const D2R = Math.PI / 180;
+  const FLY_MS = 5500;
+  let earth = null;   // { renderer, scene, camera, tiles, reorient }
+  let fly = null;     // { pk, venue, t0 }
+
+  // Ellipsoid height for the park: field elevation plus a typical US geoid offset
+  const parkHeight = v => v.elevFt * 0.3048 - 30;
+
+  async function ensureEarth(v) {
+    if (earth) {
+      earth.reorient.transformLatLonHeightToOrigin(v.lat * D2R, v.lon * D2R, parkHeight(v));
+      return earth;
+    }
+    const [{ TilesRenderer }, P, { DRACOLoader }] = await Promise.all([
+      import(`${TILES_LIB}/index.js`),
+      import(`${TILES_LIB}/index.plugins.js`),
+      import('three/addons/loaders/DRACOLoader.js')
+    ]);
+    const r = new THREE.WebGLRenderer({ antialias: true });
+    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    r.setSize(W, H);
+    document.getElementById('earth').appendChild(r.domElement);
+    const sc = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(38, W / H, 1, 4e6);
+
+    const tiles = new TilesRenderer();
+    tiles.registerPlugin(new P.GoogleCloudAuthPlugin({ apiToken: GOOGLE_TILES_KEY, autoRefreshToken: true }));
+    tiles.registerPlugin(new P.TileCompressionPlugin());
+    tiles.registerPlugin(new P.TilesFadePlugin());
+    const draco = new DRACOLoader();
+    draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
+    tiles.registerPlugin(new P.GLTFExtensionsPlugin({ dracoLoader: draco }));
+    // First park is set here so the root tileset lands on it; later parks re-center via transform
+    const reorient = new P.ReorientationPlugin({ lat: v.lat * D2R, lon: v.lon * D2R, height: parkHeight(v) });
+    tiles.registerPlugin(reorient);
+    tiles.addEventListener('load-model', () => { document.getElementById('fly-status').style.display = 'none'; });
+    sc.add(tiles.group);
+    tiles.setCamera(cam);
+    tiles.setResolutionFromRenderer(cam, r);
+
+    earth = { renderer: r, scene: sc, camera: cam, tiles, reorient };
+    if (new URLSearchParams(location.search).has('debug')) window.kkEarth = earth;
+    return earth;
+  }
+
+  async function flyTo(pk) {
+    const g = currentGames.find(x => x.gamePk === pk);
+    const v = g?._venue;
+    if (!v) return;
+    fly = { pk, venue: v, t0: performance.now() };
+    document.body.classList.add('flying');
+    renderFlyPanel();
+    const status = document.getElementById('fly-status');
+    status.textContent = 'LOADING GOOGLE EARTH…';
+    status.style.display = earth ? 'none' : 'block';
+    try {
+      await ensureEarth(v);
+      fly.t0 = performance.now();
+    } catch (err) {
+      console.error('Google tiles error:', err);
+      status.textContent = 'GOOGLE EARTH UNAVAILABLE';
+      status.style.display = 'block';
+    }
+  }
+
+  function closeFly() {
+    fly = null;
+    document.body.classList.remove('flying');
+    document.getElementById('fly-status').style.display = 'none';
+  }
+
+  function renderFlyPanel() {
+    const g = currentGames.find(x => x.gamePk === fly.pk);
+    if (!g) { closeFly(); return; }
+    const v = fly.venue;
+    const roof = v.roof === 'Open' ? 'Open air' : (v.roof === 'Dome' ? 'Dome' : 'Retractable roof');
+    const wx = weatherFor(v);
+    document.getElementById('fly').innerHTML = `
+      <div class="fly-venue">
+        <h2>${v.name}</h2>
+        <div class="meta">${v.city} · ${roof} · ${Number(v.elevFt).toLocaleString()} ft</div>
+        ${wx ? `<div class="wx">${wx}</div>` : ''}
+      </div>
+      <div class="mcard ${statusBucket(g)}">${cardHtml(g)}</div>
+      <div class="fly-actions">
+        <button class="nav-btn" data-fly-close>‹ Back to map</button>
+        <a class="nav-btn" href="index.html?date=${boardDate()}&game=${g.gamePk}">Box score</a>
+      </div>`;
+  }
+
+  document.getElementById('fly').addEventListener('click', e => {
+    if (e.target.closest('[data-fly-close]')) closeFly();
+  });
+
+  const easeInOut = k => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+  let lastAttr = 0;
+
+  // High-home shot: behind the plate, looking out toward center field, with a slow sway
+  function renderEarth(now) {
+    const { renderer: r, scene: sc, camera: cam, tiles } = earth;
+    const v = fly.venue;
+    const elapsed = now - fly.t0;
+    const k = easeInOut(Math.min(1, elapsed / FLY_MS));
+    const radius = 3400 + (400 - 3400) * k;
+    const height = 2600 + (175 - 2600) * k;
+    const cf = v.azimuth * D2R;                       // compass bearing home plate -> center field
+    const sway = Math.sin(elapsed / 1000 * 0.1) * 0.6 * k;
+    const b = cf + Math.PI + sway;                    // stand on the home-plate side
+    // Reorientation frame: X = west, Z = north, Y = up
+    cam.position.set(-Math.sin(b) * radius, height, Math.cos(b) * radius);
+    cam.lookAt(-Math.sin(cf) * 40, 0, Math.cos(cf) * 40);
+    cam.updateMatrixWorld();
+    tiles.setCamera(cam);
+    tiles.setResolutionFromRenderer(cam, r);
+    tiles.update();
+    r.render(sc, cam);
+
+    if (now - lastAttr > 1000) {
+      lastAttr = now;
+      const text = tiles.getAttributions().filter(a => a.type === 'string').map(a => a.value).join(' ');
+      document.getElementById('google-attr').textContent = text;
+    }
+  }
+
   // --- Per-frame overlays ------------------------------------------
   const linesSvg = document.getElementById('lines');
   const clock = new THREE.Clock();
 
-  function frame() {
+  function frame(now) {
+    if (fly && earth) {
+      renderEarth(now);
+      requestAnimationFrame(frame);
+      return;
+    }
+    if (fly) { requestAnimationFrame(frame); return; }
     const t = clock.getElapsedTime();
     // Slow broadcast drift
     camera.position.set(CAM_BASE.x + Math.sin(t * 0.06) * 40, CAM_BASE.y, CAM_BASE.z + Math.cos(t * 0.05) * 12);
@@ -1233,6 +1481,7 @@
       history.pushState(null, '', url);
     }
     assignmentKey = '';
+    closeFly();
     updateClock();
     fetchGames();
   }
@@ -1242,7 +1491,9 @@
   document.getElementById('day-next').addEventListener('click', () => goToDate(addDays(boardDate(), 1)));
   document.getElementById('day-today').addEventListener('click', () => goToDate(todayBoardDate()));
   document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft') goToDate(addDays(boardDate(), -1));
+    if (e.key === 'Escape') closeFly();
+    else if (fly) return;
+    else if (e.key === 'ArrowLeft') goToDate(addDays(boardDate(), -1));
     else if (e.key === 'ArrowRight') goToDate(addDays(boardDate(), 1));
   });
 
