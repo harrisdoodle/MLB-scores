@@ -225,7 +225,8 @@
     padding: 0 14px;
   }
 
-  .date-btn svg, .theme-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .date-btn svg, .theme-btn svg, .map-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .map-btn { gap: 8px; text-decoration: none; }
 
   .nav-btn {
     font-family: 'JetBrains Mono', monospace;
@@ -1079,6 +1080,7 @@
           <button class="nav-btn date-btn" id="cal-btn" aria-label="Pick a date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="date" id="date"></span></button>
           <button class="nav-btn arrow" id="day-next" aria-label="Next day">›</button>
           <button class="nav-btn" id="day-today" hidden>Today</button>
+          <a class="nav-btn map-btn" id="map-link" href="map.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>Map</a>
           <button class="nav-btn theme-btn" id="theme-btn" aria-label="Toggle light and dark"></button>
         </div>
       </div>
@@ -1167,6 +1169,7 @@
     return /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= FIRST_DATE ? d : null;
   }
   let dateOverride = dateFromUrl();
+  let pendingGame = Number(new URLSearchParams(location.search).get('game')) || null;  // from a map card click
 
   // --- Responsive scale of the 1920x1080 stage ------------------
   function scaleStage() {
@@ -1225,6 +1228,7 @@
     dateEl.innerHTML = dateOverride ? `<span class="archive">${label}</span>` : label;
     document.getElementById('cal-btn').title = dateOverride ? 'Archive date: pick another day' : 'Pick a date';
     document.getElementById('day-today').hidden = !dateOverride;
+    document.getElementById('map-link').href = 'map.html' + (dateOverride ? `?date=${dateOverride}` : '');
   }
   updateClock();
   setInterval(updateClock, 1000);
@@ -1377,6 +1381,7 @@
         next = POLL_EMPTY;
       } else {
         render(games);
+        if (pendingGame && gameIndex.has(pendingGame)) { openBox(pendingGame); pendingGame = null; }
         next = games.some(g => statusBucket(g) === 'live') ? POLL_LIVE : POLL_IDLE;
       }
       ok = true;
